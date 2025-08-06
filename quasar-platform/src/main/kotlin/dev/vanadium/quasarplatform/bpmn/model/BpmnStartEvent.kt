@@ -1,4 +1,4 @@
-package dev.vanadium.quasarplatform.bpmn.model.event
+package dev.vanadium.quasarplatform.bpmn.model
 
 import dev.vanadium.quasarplatform.bpmn.model.properties.Identifiable
 import dev.vanadium.quasarplatform.bpmn.model.properties.Named
@@ -8,7 +8,7 @@ class BpmnStartEvent(
     override val id: String,
     override val name: String?,
     override var outgoingFlow: List<String>
-) : Identifiable, Named, Outgoing {
+) : Identifiable, Named, Outgoing, Activity {
 
 
 

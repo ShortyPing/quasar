@@ -10,9 +10,13 @@
         <module name="quasar-platform.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="quasar-platform" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="dev.vanadium.quasar-platform" options="-parameters" />
       <module name="quasar-platform" options="-parameters" />
       <module name="quasar-platform.main" options="-parameters" />
       <module name="quasar-platform.test" options="-parameters" />

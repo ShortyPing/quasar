@@ -3,12 +3,13 @@ package dev.vanadium.quasarplatform.bpmn.parser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import dev.vanadium.quasarplatform.bpmn.model.BpmnProcess
-import dev.vanadium.quasarplatform.bpmn.model.event.BpmnEndEvent
-import dev.vanadium.quasarplatform.bpmn.model.flow.BpmnSequenceFlow
-import dev.vanadium.quasarplatform.bpmn.model.task.BpmnServiceTask
-import dev.vanadium.quasarplatform.bpmn.model.event.BpmnStartEvent
+import dev.vanadium.quasarplatform.bpmn.model.BpmnEndEvent
+import dev.vanadium.quasarplatform.bpmn.model.BpmnSequenceFlow
+import dev.vanadium.quasarplatform.bpmn.model.BpmnServiceTask
+import dev.vanadium.quasarplatform.bpmn.model.BpmnStartEvent
 import dev.vanadium.quasarplatform.bpmn.parser.exception.BpmnMissingXmlAttributeException
 import dev.vanadium.quasarplatform.bpmn.parser.exception.BpmnParseException
+import dev.vanadium.quasarplatform.runtime.SimpleProcessRuntime
 import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
 import org.springframework.util.ResourceUtils
@@ -25,6 +26,7 @@ class BpmnParser {
 
         val process = parseBpmn(file.readText())
 
+        SimpleProcessRuntime(process).startProcess()
 
     }
 

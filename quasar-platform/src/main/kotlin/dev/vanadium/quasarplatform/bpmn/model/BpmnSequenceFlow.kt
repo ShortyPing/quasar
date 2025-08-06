@@ -1,4 +1,4 @@
-package dev.vanadium.quasarplatform.bpmn.model.flow
+package dev.vanadium.quasarplatform.bpmn.model
 
 import dev.vanadium.quasarplatform.bpmn.model.properties.Identifiable
 import dev.vanadium.quasarplatform.bpmn.model.properties.Named
