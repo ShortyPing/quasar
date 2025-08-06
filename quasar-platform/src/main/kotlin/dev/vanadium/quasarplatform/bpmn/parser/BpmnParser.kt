@@ -14,21 +14,8 @@ import jakarta.annotation.PostConstruct
 import org.springframework.stereotype.Service
 import org.springframework.util.ResourceUtils
 
-@Service
 class BpmnParser {
-
-
     private val xmlMapper = XmlMapper()
-
-    @PostConstruct
-    fun init() {
-        val file = ResourceUtils.getFile("classpath:simple-example.bpmn")
-
-        val process = parseBpmn(file.readText())
-
-        SimpleProcessRuntime(process).startProcess()
-
-    }
 
 
     fun parseBpmn(xml: String): BpmnProcess {

@@ -4,4 +4,31 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+
+    <changeSet id="create process_definition table" author="michael steinmoetzger">
+        <createTable tableName="process_definition_revision">
+            <column name="process_definition_revision_id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="bpmn_id" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revision_number" type="number">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bpmn_xml" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bpmn_sha" type="text">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="process_definition_revision" columnNames="bpmn_id,revision_number"/>
+    </changeSet>
 </databaseChangeLog>

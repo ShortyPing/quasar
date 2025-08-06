@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/quasar.iml" filepath="$PROJECT_DIR$/quasar.iml" />
-      <module fileurl="file://$PROJECT_DIR$/quasar-platform/quasar-platform.iml" filepath="$PROJECT_DIR$/quasar-platform/quasar-platform.iml" />
     </modules>
   </component>
 </project>

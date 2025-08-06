@@ -13,7 +13,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
-class SimpleProcessRuntime(val bpmnProcess: BpmnProcess) {
+class  SimpleProcessRuntime(val bpmnProcess: BpmnProcess) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
