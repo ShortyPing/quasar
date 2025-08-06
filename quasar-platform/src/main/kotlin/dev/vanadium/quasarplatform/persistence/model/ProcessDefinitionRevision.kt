@@ -1,4 +1,4 @@
-package dev.vanadium.quasarplatform.model
+package dev.vanadium.quasarplatform.persistence.model
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

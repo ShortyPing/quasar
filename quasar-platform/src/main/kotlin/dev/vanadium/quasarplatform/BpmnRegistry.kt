@@ -2,8 +2,9 @@ package dev.vanadium.quasarplatform
 
 import dev.vanadium.quasarplatform.bpmn.model.BpmnProcess
 import dev.vanadium.quasarplatform.bpmn.parser.BpmnParser
-import dev.vanadium.quasarplatform.model.ProcessDefinitionRevision
-import dev.vanadium.quasarplatform.persistence.ProcessDefinitionRevisionRepository
+import dev.vanadium.quasarplatform.exception.ProcessDefinitionNotFoundException
+import dev.vanadium.quasarplatform.persistence.model.ProcessDefinitionRevision
+import dev.vanadium.quasarplatform.persistence.repository.ProcessDefinitionRevisionRepository
 import dev.vanadium.quasarplatform.utils.sha256
 import jakarta.annotation.PostConstruct
 import org.slf4j.Logger
@@ -77,6 +78,10 @@ class BpmnRegistry(
 
 
     fun getProcess(id: String): BpmnProcess {
-        return bpmnRegistry[id] ?: throw RuntimeException("Process with id $id does not exist")
+        return bpmnRegistry[id] ?: throw ProcessDefinitionNotFoundException(id)
+    }
+
+    fun getStoredProcessDefinition(id: String): ProcessDefinitionRevision {
+        return processDefinitionRevisionRepository.findByBpmnId(id).maxBy { it.revisionNumber }
     }
 }

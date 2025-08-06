@@ -1,5 +1,10 @@
 package dev.vanadium.quasarplatform.api
 
-interface QuasarEngine {
+import dev.vanadium.quasarplatform.persistence.impl.ProcessToken
 
+
+interface QuasarEngine {
+    val workerId: String
+
+    fun startProcess(processDefinitionId: String): ProcessToken
 }

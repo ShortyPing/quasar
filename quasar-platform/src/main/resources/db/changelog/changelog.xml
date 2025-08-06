@@ -31,4 +31,41 @@
         </createTable>
         <addUniqueConstraint tableName="process_definition_revision" columnNames="bpmn_id,revision_number"/>
     </changeSet>
+
+    <changeSet id="create process_token table" author="michael steinmötzger">
+        <createTable tableName="process_token">
+            <column name="process_token_id" type="uuid" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="process_definition" type="uuid">
+                <constraints nullable="false" referencedTableName="process_definition_revision" referencedColumnNames="process_definition_revision_id" foreignKeyName="fk_process_token_process_definition_revision"/>
+            </column>
+            <column name="current_activity_name" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="current_activity" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_process_token" type="uuid">
+                <constraints nullable="true" />
+            </column>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variables" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lock_worker_id" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="lock_expiration" type="timestamptz">
+                <constraints nullable="true"/>
+            </column>
+
+        </createTable>
+        <addForeignKeyConstraint baseTableName="process_token" baseColumnNames="parent_process_token"
+                                 constraintName="fk_process_token_parent"
+                                 referencedTableName="process_token"
+                                 referencedColumnNames="process_token_id"/>
+    </changeSet>
 </databaseChangeLog>

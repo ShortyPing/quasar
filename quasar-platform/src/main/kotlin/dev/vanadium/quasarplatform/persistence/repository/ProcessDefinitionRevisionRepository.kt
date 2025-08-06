@@ -1,6 +1,6 @@
-package dev.vanadium.quasarplatform.persistence
+package dev.vanadium.quasarplatform.persistence.repository
 
-import dev.vanadium.quasarplatform.model.ProcessDefinitionRevision
+import dev.vanadium.quasarplatform.persistence.model.ProcessDefinitionRevision
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.*
 

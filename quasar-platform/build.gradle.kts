@@ -26,6 +26,8 @@ repositories {
 }
 
 dependencies {
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")

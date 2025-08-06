@@ -2,6 +2,7 @@ package dev.vanadium.quasarplatform.bpmn.parser
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
+import dev.vanadium.quasarplatform.bpmn.model.Activity
 import dev.vanadium.quasarplatform.bpmn.model.BpmnProcess
 import dev.vanadium.quasarplatform.bpmn.model.BpmnEndEvent
 import dev.vanadium.quasarplatform.bpmn.model.BpmnSequenceFlow
@@ -26,13 +27,16 @@ class BpmnParser {
         val processId = process.getRequiredText("id")
         val name = process.get("name")?.asText()
 
+        val activities: List<Activity> = listOf<Activity>(parseStartEvent(process)) +
+                        parseServiceTasks(process) +
+                        parseEndEvent(process)
+
         val bpmnProcess = BpmnProcess(
             processId,
             name,
             parseStartEvent(process),
-            parseSequenceFlows(process),
-            parseServiceTasks(process),
-            parseEndEvent(process)
+            activities,
+            parseSequenceFlows(process)
         )
 
         return bpmnProcess
