@@ -6,4 +6,5 @@ import java.util.*
 
 interface ProcessDefinitionRevisionRepository : JpaRepository<ProcessDefinitionRevision, UUID> {
     fun findByBpmnId(bpmnId: String): List<ProcessDefinitionRevision>
+
 }

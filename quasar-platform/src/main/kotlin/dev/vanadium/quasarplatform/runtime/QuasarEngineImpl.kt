@@ -6,16 +6,20 @@ import dev.vanadium.quasarplatform.persistence.impl.ProcessToken
 import dev.vanadium.quasarplatform.persistence.model.ProcessTokenModel
 import dev.vanadium.quasarplatform.persistence.repository.ProcessTokenModelRepository
 import dev.vanadium.quasarplatform.properties.QuasarLockProperties
+import dev.vanadium.quasarplatform.runtime.processor.QuasarAnnotationBeanProcessor
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.support.TransactionTemplate
 import java.util.UUID
 
 @Service
 class QuasarEngineImpl(
     val bpmnRegistry: BpmnRegistry,
     private val quasarLockProperties: QuasarLockProperties,
-    private val processTokenModelRepository: ProcessTokenModelRepository
+    private val processTokenModelRepository: ProcessTokenModelRepository,
+    private val quasarAnnotationBeanProcessor: QuasarAnnotationBeanProcessor,
+    private val transactionTemplate: TransactionTemplate
 ) : QuasarEngine {
 
 
@@ -32,9 +36,6 @@ class QuasarEngineImpl(
 
         logger.info("Initialized QuasarEngine (workerId=$workerId)")
 
-        // TODO: Remove
-
-        startProcess("Process_1uu8hhf")
     }
 
     override fun startProcess(processDefinitionId: String): ProcessToken {
@@ -54,9 +55,11 @@ class QuasarEngineImpl(
             processToken.id,
             processToken,
             processTokenModelRepository,
+            process,
             this,
             quasarLockProperties,
-            process
+            quasarAnnotationBeanProcessor,
+            transactionTemplate
         ).also {
             it.acquireLock()
             it.initiateHeartbeat()

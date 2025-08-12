@@ -6,3 +6,6 @@ spring:
     driverClassName: org.postgresql.Driver
   liquibase:
     default-schema: public
+logging:
+  level:
+    dev.vanadium.quasarplatform: debug

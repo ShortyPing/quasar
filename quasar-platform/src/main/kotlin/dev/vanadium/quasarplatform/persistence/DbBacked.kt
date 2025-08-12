@@ -3,14 +3,18 @@ package dev.vanadium.quasarplatform.persistence
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
-interface DbBacked<DB_OBJECT : Any, REPOSITORY : JpaRepository<DB_OBJECT, UUID>> {
+abstract class DbBacked<DB_OBJECT : Any, REPOSITORY : JpaRepository<DB_OBJECT, UUID>> internal constructor(
+    internal open var id: UUID,
+    internal open var delegate: DB_OBJECT,
+    internal open var repository: REPOSITORY
+) {
 
-    var id: UUID
-    var representation: DB_OBJECT
-    var repository: REPOSITORY
+    protected open fun save() {
+        saveWithoutChecks()
+    }
 
-    fun save() {
-        representation = repository.save(representation)
+    protected fun saveWithoutChecks() {
+        delegate = repository.save(delegate)
     }
 
 

@@ -2,18 +2,9 @@ package dev.vanadium.quasarplatform.bpmn.parser
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import dev.vanadium.quasarplatform.bpmn.model.Activity
-import dev.vanadium.quasarplatform.bpmn.model.BpmnProcess
-import dev.vanadium.quasarplatform.bpmn.model.BpmnEndEvent
-import dev.vanadium.quasarplatform.bpmn.model.BpmnSequenceFlow
-import dev.vanadium.quasarplatform.bpmn.model.BpmnServiceTask
-import dev.vanadium.quasarplatform.bpmn.model.BpmnStartEvent
+import dev.vanadium.quasarplatform.bpmn.model.*
 import dev.vanadium.quasarplatform.bpmn.parser.exception.BpmnMissingXmlAttributeException
 import dev.vanadium.quasarplatform.bpmn.parser.exception.BpmnParseException
-import dev.vanadium.quasarplatform.runtime.SimpleProcessRuntime
-import jakarta.annotation.PostConstruct
-import org.springframework.stereotype.Service
-import org.springframework.util.ResourceUtils
 
 class BpmnParser {
     private val xmlMapper = XmlMapper()
@@ -29,7 +20,8 @@ class BpmnParser {
 
         val activities: List<Activity> = listOf<Activity>(parseStartEvent(process)) +
                         parseServiceTasks(process) +
-                        parseEndEvent(process)
+                        parseEndEvent(process) +
+                        parseGateways(process)
 
         val bpmnProcess = BpmnProcess(
             processId,
@@ -41,6 +33,7 @@ class BpmnParser {
 
         return bpmnProcess
     }
+
 
 
     fun parseStartEvent(process: JsonNode): BpmnStartEvent {
@@ -97,6 +90,23 @@ class BpmnParser {
 
             BpmnServiceTask(id, name, incoming, outgoing, taskDefinition)
         }
+    }
+
+    fun parseGateways(process: JsonNode): List<BpmnGateway> {
+        val gateways = mutableListOf<BpmnGateway>()
+
+        val parallelGatewayNode = process.get("parallelGateway")
+
+        gateways += parseOneOrMultipleOccurrences(parallelGatewayNode) { node ->
+            val id = node.getRequiredText("id")
+            val name = node.get("name")?.asText()
+            val incoming = parseIncoming(node)
+            val outgoing = parseOutgoing(node)
+
+            BpmnGateway(id, name, incoming, outgoing, GatewayType.PARALLEL)
+        }
+
+        return gateways
     }
 
     fun <T> parseOneOrMultipleOccurrences(node: JsonNode?, factory: (node: JsonNode) -> T): List<T> {
