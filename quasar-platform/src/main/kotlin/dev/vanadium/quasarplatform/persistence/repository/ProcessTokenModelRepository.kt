@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
 
@@ -30,6 +31,7 @@ interface ProcessTokenModelRepository : JpaRepository<ProcessTokenModel, UUID> {
     AND p.status <> :status
 """
     )
+    @Transactional
     fun atomicFinish(@Param("id") id: UUID, @Param("status") status: TokenStatus): Int
 
     @Modifying
@@ -50,6 +52,31 @@ where t.id = :id
         @Param("newExpiration") newExpiration: Instant,
         @Param("now") now: Instant
     ): Int
+
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+update ProcessTokenModel t
+set t.isActive = true, t.currentActivityId = :gatewayId, t.currentActivityName = :gatewayName
+where t.id = :parentId and t.isActive = false
+""")
+    fun activateParentAtGateway(
+        @Param("parentId") parentId: UUID,
+        @Param("gatewayId") gatewayId: String,
+        @Param("gatewayName") gatewayName: String?
+    ): Int
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+update ProcessTokenModel t
+set t.status = dev.vanadium.quasarplatform.persistence.model.TokenStatus.FINISHED,
+    t.isActive = false
+where t.parentProcessToken.id = :parentId
+  and t.isConcurrent = true
+  and t.status = dev.vanadium.quasarplatform.persistence.model.TokenStatus.RUNNING
+""")
+    fun finishConcurrentChildren(@Param("parentId") parentId: UUID): Int
+
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from ProcessTokenModel p where p.id = :id")

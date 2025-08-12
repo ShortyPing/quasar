@@ -57,29 +57,31 @@ class BpmnGateway(
 
         if (tokensAtGateway == incomingFlow.size) {
 
-            parentToken.isActive = true
-            parentToken.currentActivityId = id
-            processToken.repository.save(parentToken)
+            val activated = processToken.repository.activateParentAtGateway(
+                parentToken.id,
+                id,
+                name
+            )
+            logger.debug("Activated parent {} to gateway({};{})", parentToken.id, id, name)
 
-            logger.debug(
-                "Siblings {}",
-                siblingTokens.map { it.id to it.delegate.isActive to it.delegate.status })
+            if (activated == 1) {
+                // we won; best-effort cancel children first
+                val finished = processToken.repository.finishConcurrentChildren(parentToken.id)
+                logger.debug("Finished {} concurrent children for parent {}", finished, parentToken.id)
 
-            siblingTokens.filter { it.delegate.isActive }.forEach {
-                it.suspendExecution()
-                processToken.repository.atomicFinish(it.id, TokenStatus.FINISHED)
+                // Now resume the parent safely
+                val freshParent = processToken.repository.findById(parentToken.id).getOrNull() ?: return
+
+                logger.debug("Fresh parent loaded from database {} Act({};{})", freshParent.id, freshParent.currentActivityId, freshParent.currentActivityName)
+                val parentDomain = processToken.createProcessTokenDomainModel(freshParent)
+                // Acquire lock before running parent
+                parentDomain.acquireLock()
+                parentDomain.initiateHeartbeat()
+                parentDomain.run(advance = true)
+            } else {
+                // someone else activated the parent; just suspend
+                processToken.suspendExecution()
             }
-
-            logger.debug(
-                "Siblings (after atomicFinish()) {}",
-                siblingTokens.map { it.id to it.delegate.isActive to it.delegate.status })
-
-
-            val parentProcessToken = processToken.createProcessTokenDomainModel(parentToken)
-
-
-
-            parentProcessToken.runWithStart(this)
 
         } else {
             processToken.suspendExecution()

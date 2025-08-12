@@ -8,4 +8,4 @@ spring:
     default-schema: public
 logging:
   level:
-    dev.vanadium.quasarplatform: debug
+    dev.vanadium.quasarplatform: info

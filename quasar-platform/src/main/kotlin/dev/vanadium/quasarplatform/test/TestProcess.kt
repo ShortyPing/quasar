@@ -20,16 +20,37 @@ class TestProcess {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @ServiceTask("sendMessage")
-    suspend fun test(processToken: ProcessToken) {
-        logger.info("Yay send message")
-        delay(1000)
-        processToken.setVariable("userId", UUID.randomUUID().toString())
+
+    @ServiceTask("createUser")
+    suspend fun createUser(processToken: ProcessToken) {
+        logger.info("Creating user")
     }
 
-    @ServiceTask("deleteUser")
-    fun delete(processToken: ProcessToken) {
-        logger.info("Yay delete user ${processToken.getVariable("userId")}")
+    @ServiceTask("sendConfirmationEmail")
+    suspend fun sendConfirmationEmail(processToken: ProcessToken) {
+        delay(30000)
+        logger.info("Sending confirmation email")
+    }
+
+    @ServiceTask("sendNewPasswordEmail")
+    fun sendNewPasswordEmail(processToken: ProcessToken) {
+        logger.info("Sending new password email")
+    }
+
+    @ServiceTask("activateUser")
+    suspend fun activateUser(processToken: ProcessToken) {
+        logger.info("Activating user")
+    }
+
+    @ServiceTask("sendPromo")
+    suspend fun sendPromo(processToken: ProcessToken) {
+        logger.info("Sending promo")
+    }
+
+    @ServiceTask("saveUser")
+    suspend fun saveUser(processToken: ProcessToken) {
+        delay(2000)
+        logger.info("Saving user")
     }
 }
 

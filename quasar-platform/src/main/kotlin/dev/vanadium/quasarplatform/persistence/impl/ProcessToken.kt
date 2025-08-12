@@ -111,8 +111,11 @@ class ProcessToken internal constructor(
 
     fun isFinished() = delegate.status == TokenStatus.FINISHED
 
-    internal fun run() {
+    internal fun run(advance: Boolean = false) {
         runtimeScope.launch {
+            if(advance) {
+                advanceActivity()
+            }
             while (true) {
                 step()
             }
@@ -128,9 +131,25 @@ class ProcessToken internal constructor(
     }
 
     private suspend fun step() {
+        // Refresh state from DB before doing any work
+        repository.findById(id).ifPresentOrElse({ fresh ->
+            delegate = fresh
+        }, {
+            // Token deleted? Stop gracefully.
+            runtimeScope.cancel()
+            heartbeatScope.cancel()
+            return@ifPresentOrElse
+        })
+
+        if (!delegate.isActive || isFinished()) {
+            runtimeScope.cancel()
+            heartbeatScope.cancel()
+            return
+        }
+
         logger.debug("{} - coroutineActive: {}", id, runtimeScope.isActive)
-        delay(1000)
-        logger.info("Handling $id at ${(currentActivity as Named).name}")
+        currentCoroutineContext().ensureActive()
+        logger.debug("Handling {} at {}", id, (currentActivity as Named).name)
         handleActivity()
     }
 
@@ -176,9 +195,15 @@ class ProcessToken internal constructor(
             try {
                 while (isActive) {
                     delay(5_000)
-                    val updated = repository.refreshLockIfPossible(
-                        id, quasarEngine.workerId, Instant.now() + lockProperties.lockExpiration, Instant.now()
-                    )
+                    val updated = transactionTemplate.execute {
+                        repository.refreshLockIfPossible(
+                            id,
+                            quasarEngine.workerId,
+                            Instant.now() + lockProperties.lockExpiration,
+                            Instant.now()
+                        )
+                    } ?: 0
+
                     if (updated == 0) {
                         logger.warn("Heartbeat lost lock on token {}", id)
                         cancel()
@@ -200,7 +225,17 @@ class ProcessToken internal constructor(
 
     private suspend fun handleActivity() {
         currentActivity.handle(this, quasarAnnotationBeanProcessor)
-        // check whether any task ended the process to cancel early preventing it from modifying any state later
+
+        // Re-check after the activity handler, because it may have finished/suspended us via DB
+        val fresh = repository.findById(id).orElse(null)
+        if (fresh == null || fresh.status == TokenStatus.FINISHED || !fresh.isActive) {
+            runtimeScope.cancel()
+            heartbeatScope.cancel()
+            return
+        }
+        delegate = fresh
+
+        // still active -> move on
         currentCoroutineContext().ensureActive()
         advanceActivity()
     }
@@ -212,6 +247,20 @@ class ProcessToken internal constructor(
         save()
     }
 
+
+    private fun saveWithRetry(times: Int = 3, backoffMs: Long = 10) {
+        repeat(times) { attempt ->
+            try {
+                super.save()
+                return
+            } catch (e: org.springframework.orm.ObjectOptimisticLockingFailureException) {
+                if (attempt == times - 1) throw e
+                // reload fresh state and backoff
+                delegate = repository.findById(id).orElseThrow()
+                Thread.sleep(backoffMs)
+            }
+        }
+    }
 
     internal suspend fun advanceActivity() {
         val atomicCurrentActivity = currentActivity
@@ -227,7 +276,7 @@ class ProcessToken internal constructor(
         }
 
         if (atomicCurrentActivity.outgoingFlow.size > 1) {
-            throw IllegalStateException("Implicit forks are not supported to adhere to BPMN 2.0 best practices")
+            throw IllegalStateException("Implicit forks are not supported to adhere to BPMN 2.0 best practices ${atomicCurrentActivity.id}")
         }
 
         val nextFlow = atomicCurrentActivity.outgoingFlow.first()
@@ -318,7 +367,7 @@ class ProcessToken internal constructor(
             throw ProcessFinishedException(id, "cannot mutate process state")
         }
 
-        super.save()
+        saveWithRetry()
     }
 
 
